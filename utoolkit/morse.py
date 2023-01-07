@@ -33,3 +33,59 @@ def blink(cmd: str, pin: str | int = 'LED', time_unit: float = 0.2) -> None:
             sleep(time_unit * 3)
         elif c == '_':
             sleep(time_unit * 7)
+
+
+MORSE_TABLE = {
+    'A': '.-',
+    'B': '-...',
+    'C': '-.-.',
+    'D': '-..',
+    'E': '.',
+    'F': '..-.',
+    'G': '--.',
+    'H': '....',
+    'I': '..',
+    'J': '.---',
+    'K': '-.-',
+    'L': '.-..',
+    'M': '--',
+    'N': '-.',
+    'O': '---',
+    'P': '.--.',
+    'Q': '--.-',
+    'R': '.-.',
+    'S': '...',
+    'T': '-',
+    'U': '..-',
+    'V': '...-',
+    'W': '.--',
+    'X': '-..-',
+    'Y': '-.--',
+    'Z': '--..',
+    '1': '.----',
+    '2': '..---',
+    '3': '...--',
+    '4': '....-',
+    '5': '.....',
+    '6': '-....',
+    '7': '--...',
+    '8': '---..',
+    '9': '----.',
+    '0': '-----',
+}
+
+
+def morse(text: str, pin: str | int = 'LED', time_unit: float = 0.2) -> None:
+    """Blink the given `text` in morse code.
+
+    Only supports letters A-z and digits 0-9.
+    """
+    text = text.upper()
+    cmd = []
+    for c in text:
+        if c in MORSE_TABLE:
+            cmd.append(MORSE_TABLE[c])
+            cmd.append(' ')
+        elif c == ' ':
+            cmd.append('_')
+    blink(''.join(cmd), pin=pin, time_unit=time_unit)
