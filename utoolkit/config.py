@@ -1,6 +1,7 @@
-"""Environment settings support.
+"""Persistent configuration handling.
 
-To access the settings, import the "settings" object.
+To access the settings, import the "settings" object. This is a nested set of `dict` objects that are automatically
+loaded from a ".env" file, if one exists in the current working directory.
 """
 
 
@@ -71,10 +72,10 @@ class DottedDict:
         return f'DottedDict({self._data})'
 
 
-class Settings(DottedDict):
+class PersistentConfiguration(DottedDict):
     """Access settings defined in a .env file."""
 
-    def __init__(self: 'Settings') -> None:
+    def __init__(self: 'PersistentConfiguration') -> None:
         """Create a Settings object, loading settings from the .env file."""
         super().__init__()
         try:
@@ -91,4 +92,4 @@ class Settings(DottedDict):
             print(e)
 
 
-settings = Settings()
+settings = PersistentConfiguration()

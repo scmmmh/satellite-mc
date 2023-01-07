@@ -3,8 +3,8 @@ from machine import Pin
 from network import WLAN, STA_IF, STAT_CONNECTING, STAT_NO_AP_FOUND, STAT_WRONG_PASSWORD
 from time import sleep
 
-from env import settings
-from util import repeat_blink
+from utoolkit.config import settings
+from utoolkit.morse import blink
 
 
 wlan = WLAN(STA_IF)
@@ -27,7 +27,7 @@ def connect() -> bool:
     * 8: Any other connection error
     """
     if 'WIFI' not in settings:
-        repeat_blink(3, 2)
+        blink('--- --- ---')
         return False
 
     activity = Pin("LED", Pin.OUT)
@@ -48,11 +48,11 @@ def connect() -> bool:
         activity.off()
         status = wlan.status()
         if status == STAT_NO_AP_FOUND:
-            repeat_blink(3, 4)
+            blink('... ... ...')
         elif status == STAT_WRONG_PASSWORD:
-            repeat_blink(3, 6)
+            blink('.-. .-. .-.')
         else:
-            repeat_blink(3, 8)
+            blink('-.- -.- -.-')
         return False
 
 

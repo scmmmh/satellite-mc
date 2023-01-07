@@ -1,5 +1,5 @@
 """The main application."""
-from wifi import connect, disconnect
+from utoolkit.wifi import connect, disconnect
 
 
 if connect():
