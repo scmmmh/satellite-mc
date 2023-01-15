@@ -11,8 +11,10 @@ wlan = WLAN(STA_IF)
 wlan.active(True)
 
 
-def connect() -> bool:
+def connect(attempts: int = 1) -> bool:
     """Connect to the WIFI network.
+
+    Will attempt the connection `attempts` times.
 
     Requires the following two settings in the .env file:
 
@@ -33,27 +35,31 @@ def connect() -> bool:
     activity = Pin("LED", Pin.OUT)
     activity.on()
 
-    wlan.connect(settings['WIFI.SSID'], settings['WIFI.PASSWORD'])
+    while attempts > 0:
+        wlan.connect(settings['WIFI.SSID'], settings['WIFI.PASSWORD'])
 
-    timeout = 30
-    while not wlan.isconnected() and wlan.status() == STAT_CONNECTING and timeout > 0:
-        activity.toggle()
-        sleep(1)
-        timeout = timeout - 1
+        timeout = 30
+        while not wlan.isconnected() and wlan.status() == STAT_CONNECTING and timeout > 0:
+            activity.toggle()
+            sleep(1)
+            timeout = timeout - 1
 
-    if wlan.isconnected():
-        activity.off()
-        return True
-    else:
-        activity.off()
-        status = wlan.status()
-        if status == STAT_NO_AP_FOUND:
-            blink('... ... ...')
-        elif status == STAT_WRONG_PASSWORD:
-            blink('.-. .-. .-.')
+        if wlan.isconnected():
+            activity.off()
+            return True
         else:
-            blink('-.- -.- -.-')
-        return False
+            activity.off()
+            status = wlan.status()
+            if status == STAT_NO_AP_FOUND:
+                blink('... ... ...')
+            elif status == STAT_WRONG_PASSWORD:
+                blink('.-. .-. .-.')
+            else:
+                blink('-.- -.- -.-')
+        sleep(5)
+        attempts = attempts - 1
+
+    return False
 
 
 def disconnect() -> None:
