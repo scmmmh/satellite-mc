@@ -21,12 +21,14 @@ def connect(attempts: int = 1) -> bool:
     * WIFI.SSID: The network name
     * WIFI.PASSWORD: The network password
 
-    Failures are indicated via LED blinking:
+    Failures are indicated via LED blinking the following patterns 3 times:
 
-    * 2: No WIFI configuration settings found
-    * 4: No WIFI network found
-    * 6: Incorrect WIFI password
-    * 8: Any other connection error
+    * ---: No WIFI configuration settings found
+    * ...: No WIFI network found
+    * .-.: Incorrect WIFI password
+    * -.-: Any other connection error
+
+    (`.` - short blink, `-` - long blink)
     """
     if 'WIFI' not in settings:
         blink('--- --- ---')
