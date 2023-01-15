@@ -1,45 +1,70 @@
 """Setup the Microdot server in asyncio mode."""
-import uasyncio as asyncio
-
 from microdot import Request
-from microdot_asyncio import Microdot
-from .signals import GermanHauptsignal
 
-server = Microdot()
-configured_signals = {}
-
-
-async def shutdown(request: Request) -> None:
-    """Shutdown the server.
-
-    This ensures that all signals are switched off before stopping.
-    """
-    await asyncio.sleep(1)
-    for signal in configured_signals.values():
-        signal.set_signal({'state': 'off'})
-    request.app.shutdown()
+from .base import server
+from .signals import API_SCHEMA as SIGNALS_API_SCHEMA, add_signal
+from .system import API_SCHEMA as SYSTEM_API_SCHEMA
 
 
-@server.delete('/')
-async def delete_server(request: Request):  # noqa: ANN201
-    """Delete the server, initiating a shutdown."""
-    asyncio.create_task(shutdown(request))
-    return None, 204
+@server.get('/')
+async def get_openapi_explorer(request: Request):  # noqa: ANN201
+    """Return the OpenAPI Explorer UI."""
+    return """<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>Satellite Microcontroller API Documentation</title>
+    <script type="module" src="https://unpkg.com/openapi-explorer@0/dist/browser/openapi-explorer.min.js"></script>
+  </head>
+  <body>
+    <openapi-explorer spec-url="/api/schema"> </openapi-explorer>
+  </body>
+</html>
+""", 200, {'Content-Type': 'text/html; charset=UTF-8'}
 
 
-@server.patch('/signals/<uuid>')
-async def patch_signal(request: Request, uuid: str):  # noqa: ANN201
-    """Set a signal to the given state."""
-    if uuid in configured_signals:
-        signal = configured_signals[uuid]
-        if signal.validate(request.json):
-            signal.set_signal(request.json)
-            return None, 204
-        return None, 400
-    return None, 404
+@server.get('/api/schema')
+async def get_schema(request: Request) -> dict:
+    """Return the OpenAPI schema document."""
+    schema = {
+        'version': '3.1',
+        'info': {
+            'title': 'Satellite MC',
+            'version': '0.1.0'
+        },
+        'components': {
+            'schemas': {}
+        },
+        'paths': {
+            '/': {
+                'get': {
+                    'summary': 'User: API Documentation',
+                    'description': 'Access this API console'
+                }
+            },
+            '/api/schema': {
+                'get': {
+                    'summary': 'Schema: Definition',
+                    'description': 'Fetch the OpenAPI schema document for this API'
+                }
+            }
+        }
+    }
+    schema['components']['schemas'].update(SIGNALS_API_SCHEMA['schemas'])
+    schema['paths'].update(SIGNALS_API_SCHEMA['paths'])
+    schema['paths'].update(SYSTEM_API_SCHEMA['paths'])
+    return schema
 
 
 def start_server() -> None:
     """Run the server, initialising the signals."""
-    configured_signals['1'] = GermanHauptsignal(0, 1, 2)
+    add_signal({
+        'type': 'GermanHauptsignal',
+        'id': '1',
+        'params': {
+            'red_pin': 0,
+            'green_pin': 1,
+            'yellow_pin': 2,
+        }
+    })
     server.run(port=80)
