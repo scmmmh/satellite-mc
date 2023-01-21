@@ -64,7 +64,6 @@ def start_server() -> None:
         'params': {
             'red_pin': 0,
             'green_pin': 1,
-            'yellow_pin': 2,
         }
     })
     server.run(port=80)

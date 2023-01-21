@@ -135,7 +135,6 @@ class GermanHauptsignal:
     * **off**: All lights off
     * **danger**: Red light only
     * **clear**: Green light only
-    * **slow**: Green and yellow lights
     """
 
     def __init__(self: 'GermanHauptsignal', config: dict) -> None:
@@ -143,7 +142,6 @@ class GermanHauptsignal:
         self._config = config
         self._red = Pin(self._config['params']['red_pin'], Pin.OUT)
         self._green = Pin(self._config['params']['green_pin'], Pin.OUT)
-        self._yellow = Pin(self._config['params']['yellow_pin'], Pin.OUT)
         self._state = ''
         self.set_signal({'state': 'danger'})
 
@@ -151,7 +149,7 @@ class GermanHauptsignal:
         """Validate that the body is a valid instruction for this signal."""
         if body is not None and isinstance(body, dict):
             if 'state' in body and isinstance(body['state'], str):
-                if body['state'] in ['off', 'danger', 'clear', 'slow']:
+                if body['state'] in ['off', 'danger', 'clear']:
                     return True
         return False
 
@@ -161,22 +159,14 @@ class GermanHauptsignal:
             self._state = 'off'
             self._red.off()
             self._green.off()
-            self._yellow.off()
         elif body['state'] == 'danger':
             self._state = 'danger'
             self._red.on()
             self._green.off()
-            self._yellow.off()
         elif body['state'] == 'clear':
             self._state = 'clear'
             self._red.off()
             self._green.on()
-            self._yellow.off()
-        elif body['state'] == 'slow':
-            self._state = 'slow'
-            self._red.off()
-            self._green.on()
-            self._yellow.on()
 
     def as_json(self: 'GermanHauptsignal') -> dict:
         """Return this GermanHauptsignal in its JSON representation."""
