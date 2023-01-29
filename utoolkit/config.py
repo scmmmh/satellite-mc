@@ -20,6 +20,7 @@ class DottedDict:
 
     def __setitem__(self: 'DottedDict', key: str, value) -> None:  # noqa: ANN001
         """Set a value."""
+        key = key.lower()
         head, tail = self.__splitkey__(key)
         if head in self._data:
             if tail is None:
@@ -41,6 +42,7 @@ class DottedDict:
 
     def __getitem__(self: 'DottedDict', key: str):  # noqa: ANN204
         """Get a value via a key."""
+        key = key.lower()
         head, tail = self.__splitkey__(key)
         value = self._data[head]
         if tail is None:
@@ -52,6 +54,7 @@ class DottedDict:
 
     def __contains__(self: 'DottedDict', key: str) -> bool:
         """Check whether a key exists."""
+        key = key.lower()
         head, tail = self.__splitkey__(key)
         if head in self._data:
             if tail is None:
@@ -71,6 +74,17 @@ class DottedDict:
         """Return a representation of this DottedDict."""
         return f'DottedDict({self._data})'
 
+    def serialise(self: 'DottedDict') -> list:
+        """Serialise the data into a list of key, value tuples."""
+        items = []
+        for key, value in self._data.items():
+            if (isinstance(value, DottedDict)):
+                for sub_key, sub_value in value.serialise():
+                    items.append((f'{key}.{sub_key}', sub_value))
+            else:
+                items.append((key, value))
+        return items
+
 
 class PersistentConfiguration(DottedDict):
     """Access settings defined in a .env file."""
@@ -87,7 +101,17 @@ class PersistentConfiguration(DottedDict):
                     if '=' in line:
                         key = line[0:line.find('=')]
                         value = line[line.find('=') + 1:]
-                        self[key] = value
+                        super().__setitem__(key, value)
+        except OSError as e:
+            print(e)
+
+    def __setitem__(self: 'PersistentConfiguration', key: str, value) -> None:  # noqa: ANN001
+        """Persist the updated configuration values."""
+        super().__setitem__(key, value)
+        try:
+            with open('.env', 'w') as out_f:
+                for key, value in self.serialise():
+                    print(f'{key.upper()}={value}', file=out_f)
         except OSError as e:
             print(e)
 
