@@ -1,6 +1,6 @@
 """WIFI connection handling."""
 from machine import Pin
-from network import WLAN, STA_IF, STAT_CONNECTING, STAT_NO_AP_FOUND, STAT_WRONG_PASSWORD
+from network import WLAN, STA_IF, STAT_CONNECTING, STAT_NO_AP_FOUND, STAT_WRONG_PASSWORD, STAT_CONNECT_FAIL
 from time import sleep
 
 from utoolkit.config import settings
@@ -38,7 +38,10 @@ def connect(attempts: int = 1) -> bool:
     activity.on()
 
     while attempts > 0:
-        wlan.connect(settings['WIFI.SSID'], settings['WIFI.PASSWORD'])
+        wlan.connect(ssid=settings["WIFI.SSID"], key=settings["WIFI.PASSWORD"])
+
+        if "WIFI.HOSTNAME" in settings:
+            wlan.config(hostname=settings["WIFI.HOSTNAME"])
 
         timeout = 30
         while not wlan.isconnected() and wlan.status() == STAT_CONNECTING and timeout > 0:
@@ -56,7 +59,7 @@ def connect(attempts: int = 1) -> bool:
                 blink('... ... ...')
             elif status == STAT_WRONG_PASSWORD:
                 blink('.-. .-. .-.')
-            else:
+            elif status == STAT_CONNECT_FAIL:
                 blink('-.- -.- -.-')
         sleep(5)
         attempts = attempts - 1

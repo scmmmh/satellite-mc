@@ -7,6 +7,25 @@ from .base import server
 
 API_SCHEMA = {
     'schemas': {
+        'CreateSignal': {
+            'type': 'object',
+            'properties': {
+                'type': {
+                    'type': 'String'
+                },
+                'params': {
+                    'type': 'object',
+                    "id": {
+                        "type": "string"
+                    },
+                    'properties': {
+                        '^S_': {
+                            'type': 'string'
+                        }
+                    }
+                }
+            }
+        },
         'Signal':  {
             'type': 'object',
             'properties': {
@@ -14,7 +33,7 @@ API_SCHEMA = {
                     'type': 'string'
                 },
                 'type': {
-                    'type': 'String'
+                    'type': 'string'
                 },
                 'params': {
                     'type': 'object',
@@ -50,13 +69,38 @@ API_SCHEMA = {
                         }
                     }
                 }
+            },
+            'post': {
+                'summary': 'Signals: Create',
+                'description': 'Create a new signal.',
+                'requestBody': {
+                    'content': {
+                        'application/json': {
+                            'schema': {
+                                '$ref': '#/components/schemas/CreateSignal'
+                            }
+                        }
+                    }
+                },
+                'responses': {
+                    '200': {
+                        'description': 'The newly created signal.',
+                        'content': {
+                            'application/json': {
+                                'schema': {
+                                    '$ref': '#/components/schemas/Signal'
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
-        '/api/signals/{id}': {
+        '/api/signals/{sid}': {
             'summary': 'Single signal API endpoints',
             'parameters': [
                 {
-                    'name': 'id',
+                    'name': 'sid',
                     'in': 'path',
                     'description': 'The identifier of the signal to set',
                     'required': True,
@@ -121,6 +165,18 @@ API_SCHEMA = {
                         'description': 'The id does not identify an existing signal'
                     }
                 }
+            },
+            'delete': {
+                'summary': 'Signals: Delete',
+                'description': 'Delete the specified signal.',
+                'responses': {
+                    '200': {
+                        'description': 'The signal has been deleted.'
+                    },
+                    '404': {
+                        'description': 'The id does not identify an existing signal'
+                    }
+                }
             }
         }
     }
@@ -145,7 +201,17 @@ class GermanHauptsignal:
         self._state = ''
         self.set_signal({'state': 'danger'})
 
-    def validate(self: 'GermanHauptsignal', body) -> bool:  # noqa: ANN001
+    @classmethod
+    def validate_create(cls, body: dict) -> bool:  # noqa: ANN001, ANN102
+        """Validate that the body is a valid config for this signal."""
+        if body is not None and isinstance(body, dict):
+            if "type" in body and body["type"] == "GermanHauptsignal":
+                if "params" in body and isinstance(body["params"], dict):
+                    if "red_pin" in body["params"] and "green_pin" in body["params"]:
+                        return True
+        return False
+
+    def validate_update(self: 'GermanHauptsignal', body) -> bool:  # noqa: ANN001
         """Validate that the body is a valid instruction for this signal."""
         if body is not None and isinstance(body, dict):
             if 'state' in body and isinstance(body['state'], str):
@@ -187,30 +253,47 @@ async def get_all_signals(request: Request) -> list:
     return [signal.as_json() for signal in signals.values()]
 
 
-@server.get('/api/signals/<id>')
-async def get_signal(request: Request, id: str):  # noqa: ANN201
+@server.post("/api/signals")
+async def create_signal(request: Request):  # noqa: ANN201
+    """Create a new signal."""
+    config = request.json
+    if config is not None and "type" in config and "id" in config:
+        if config["id"] not in signals:
+            if config["type"] == "GermanHauptsignal":
+                if GermanHauptsignal.validate_create(config):
+                    signals[config["id"]] = GermanHauptsignal(config)
+                    return signals[config["id"]].as_json()
+    return None, 400
+
+
+@server.get('/api/signals/<sid>')
+async def get_signal(request: Request, sid: str):  # noqa: ANN201
     """Get a single signal."""
-    if id in signals:
-        return signals[id].as_json()
+    if sid in signals:
+        return signals[sid].as_json()
     return None, 404
 
 
-@server.patch('/api/signals/<id>')
-async def patch_signal(request: Request, id: str):  # noqa: ANN201
+@server.patch('/api/signals/<sid>')
+async def patch_signal(request: Request, sid: str):  # noqa: ANN201
     """Set a signal to the given state."""
-    if id in signals:
-        signal = signals[id]
-        if signal.validate(request.json):
+    if sid in signals:
+        signal = signals[sid]
+        if signal.validate_update(request.json):
             signal.set_signal(request.json)
             return signal.as_json()
         return None, 400
     return None, 404
 
 
-def add_signal(config: dict) -> None:
-    """Add a signal to the set of available signals."""
-    if config['type'] == 'GermanHauptsignal':
-        signals[config['id']] = GermanHauptsignal(config)
+@server.delete('/api/signals/<sid>')
+async def delete_signal(request: Request, sid: str):  # noqa: ANN201
+    """Delete the signal."""
+    if sid in signals:
+        signals[sid].set_signal({"state": "off"})
+        del signals[sid]
+        return None, 200
+    return None, 404
 
 
 def shutdown() -> None:

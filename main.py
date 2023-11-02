@@ -1,9 +1,11 @@
 """The main application."""
-from utoolkit.wifi import connect, disconnect
 
-from server import start_server
+from server import start_server, shutdown_server
+from utoolkit.wifi import connect
 
 
-if connect(3):
-    start_server()
-    disconnect()
+if connect(attempts=3):
+    try:
+        start_server()
+    except KeyboardInterrupt:
+        shutdown_server()

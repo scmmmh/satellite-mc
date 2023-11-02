@@ -2,7 +2,7 @@
 from microdot import Request
 
 from .base import server
-from .signals import API_SCHEMA as SIGNALS_API_SCHEMA, add_signal
+from .signals import API_SCHEMA as SIGNALS_API_SCHEMA, shutdown as signals_shutdown
 from .system import API_SCHEMA as SYSTEM_API_SCHEMA
 
 
@@ -57,13 +57,10 @@ async def get_schema(request: Request) -> dict:
 
 
 def start_server() -> None:
-    """Run the server, initialising the signals."""
-    add_signal({
-        'type': 'GermanHauptsignal',
-        'id': '1',
-        'params': {
-            'red_pin': 0,
-            'green_pin': 1,
-        }
-    })
+    """Run the server."""
     server.run(port=80)
+
+
+def shutdown_server() -> None:
+    """Shut down the server."""
+    signals_shutdown()
