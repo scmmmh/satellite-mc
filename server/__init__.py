@@ -4,6 +4,7 @@ from microdot import Request
 from .base import server
 from .signals import API_SCHEMA as SIGNALS_API_SCHEMA, shutdown as signals_shutdown
 from .system import API_SCHEMA as SYSTEM_API_SCHEMA
+from .turnouts import API_SCHEMA as TURNOUTS_API_SCHEMA, shutdown as turnouts_shutdown
 
 
 @server.get('/')
@@ -53,6 +54,7 @@ async def get_schema(request: Request) -> dict:
     schema['components']['schemas'].update(SIGNALS_API_SCHEMA['schemas'])
     schema['paths'].update(SIGNALS_API_SCHEMA['paths'])
     schema['paths'].update(SYSTEM_API_SCHEMA['paths'])
+    schema['paths'].update(TURNOUTS_API_SCHEMA['paths'])
     return schema
 
 
@@ -64,3 +66,4 @@ def start_server() -> None:
 def shutdown_server() -> None:
     """Shut down the server."""
     signals_shutdown()
+    turnouts_shutdown()
