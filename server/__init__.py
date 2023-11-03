@@ -52,6 +52,7 @@ async def get_schema(request: Request) -> dict:
         }
     }
     schema['components']['schemas'].update(SIGNALS_API_SCHEMA['schemas'])
+    schema['components']['schemas'].update(TURNOUTS_API_SCHEMA['schemas'])
     schema['paths'].update(SIGNALS_API_SCHEMA['paths'])
     schema['paths'].update(SYSTEM_API_SCHEMA['paths'])
     schema['paths'].update(TURNOUTS_API_SCHEMA['paths'])

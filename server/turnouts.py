@@ -210,7 +210,11 @@ class TwoPinSolenoidTurnout:
         self._direction = Pin(self._config['params']['direction_pin'], Pin.OUT)
         self._turnout_high = self._config["params"]["turnout_high"]
         self._state = ''
-        self.set_turnout({'state': 'off'})
+        self.set_turnout({'state': 'straight'})
+        sleep(0.5)
+        self.set_turnout({'state': 'turn'})
+        sleep(0.5)
+        self.set_turnout({'state': 'straight'})
 
     @classmethod
     def validate_create(cls, body: dict) -> bool:  # noqa: ANN001, ANN102
