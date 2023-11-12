@@ -14,7 +14,7 @@ async def get_openapi_explorer(request: Request):  # noqa: ANN201
 <html>
   <head>
     <meta charset="UTF-8"/>
-    <title>Satellite Microcontroller API Documentation</title>
+    <title>Model Railway Thin Controller API Documentation</title>
     <script type="module" src="https://unpkg.com/openapi-explorer@0/dist/browser/openapi-explorer.min.js"></script>
   </head>
   <body>
@@ -30,8 +30,8 @@ async def get_schema(request: Request) -> dict:
     schema = {
         'version': '3.1',
         'info': {
-            'title': 'Satellite MC',
-            'version': '0.1.0'
+            'title': 'Model Railway Thin Controller',
+            'version': '0.2.0'
         },
         'components': {
             'schemas': {}
